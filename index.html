@@ -667,29 +667,43 @@ const SPIDER=(function(){
  function mergeG(arr){let n=0;arr.forEach(a=>n+=a.attributes.position.count);const pos=new Float32Array(n*3);let o=0;arr.forEach(a=>{const g=a.index?a.toNonIndexed():a;pos.set(g.attributes.position.array,o);o+=g.attributes.position.array.length;});const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(pos,3));m.computeVertexNormals();return m;}
  function buildSpider(scene){let sd=3;const R=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
   g=new THREE.Group();g.visible=false;scene.add(g);
-  const brown=L({color:0x6a4426,emissive:0x2a160a,flatShading:true}),hair=L({color:0x4e3218,emissive:0x22120a,flatShading:true}),dk=L({color:0x2a1a0c,emissive:0x100804,flatShading:true});
+  const brown=L({color:0x7a4420,emissive:0xb04a10,flatShading:true}),hair=L({color:0x8a4a1a,emissive:0xd86018,flatShading:true}),dk=L({color:0x3a1c0a,emissive:0x5a2408,flatShading:true}),hot=new THREE.MeshBasicMaterial({color:0xffa030}),mark=new THREE.MeshBasicMaterial({color:0xffb040});
+  S.glowM=[brown,hair,dk];[brown,hair,dk,hot,mark].forEach(m=>m.fog=false);S.hotM=[hot,mark];
   const body=new THREE.Group();body.position.y=.75;g.add(body);S.body=body;
-  const ab=new THREE.IcosahedronGeometry(.55,1);ab.scale(1,.8,1.25);ab.translate(0,.12,.62);const ce=new THREE.IcosahedronGeometry(.36,1);ce.scale(1,.7,1.1);ce.translate(0,0,-.1);
-  body.add(new THREE.Mesh(ab,brown));body.add(new THREE.Mesh(ce,brown));
-  const fz=fur(ab,170,.2,R).concat(fur(ce,80,.14,R));body.add(new THREE.Mesh(mergeG(fz),hair));
-  // stripes on abdomen
-  for(let i=0;i<3;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(.5-i*.08,.035,3,10),dk);r.rotation.x=Math.PI/2;r.scale.set(1,1.3,1);r.position.set(0,.3+i*.06,.45+i*.25);body.add(r);}
-  // fangs
-  for(const s of [-1,1]){const f=new THREE.Mesh(new THREE.ConeGeometry(.05,.22,4),dk);f.rotation.x=-Math.PI*.85;f.position.set(s*.09,-.12,-.43);body.add(f);}
-  // eyes: 2 big + 6 small, unlit and fog-free so they glow in the dark
-  eyesG=new THREE.Group();body.add(eyesG);const em=new THREE.MeshBasicMaterial({color:0xff2010,fog:false});
-  const E=[[-.09,.13,-.42,.055],[.09,.13,-.42,.055],[-.2,.1,-.36,.035],[.2,.1,-.36,.035],[-.05,.22,-.36,.03],[.05,.22,-.36,.03],[-.14,.2,-.3,.025],[.14,.2,-.3,.025]];
-  E.forEach(([x,y,z,r])=>{const e=new THREE.Mesh(new THREE.IcosahedronGeometry(r,0),em);e.position.set(x,y,z);eyesG.add(e);});
-  const gc=document.createElement('canvas');gc.width=gc.height=32;const gx=gc.getContext('2d');const gr=gx.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,'rgba(255,60,30,1)');gr.addColorStop(.4,'rgba(255,20,0,.35)');gr.addColorStop(1,'rgba(255,0,0,0)');gx.fillStyle=gr;gx.fillRect(0,0,32,32);
-  const gt=new THREE.CanvasTexture(gc);for(const s of [-1,1]){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,transparent:true}));sp.scale.set(.5,.5,1);sp.position.set(s*.1,.15,-.45);eyesG.add(sp);}
-  // 8 legs, 3 segments, hairy
-  const segG=[new THREE.CylinderGeometry(.06,.05,.62,5),new THREE.CylinderGeometry(.05,.035,.7,5),new THREE.CylinderGeometry(.035,.015,.62,4)];segG.forEach(s=>s.translate(0,-s.parameters.height/2,0));
-  const legHair=segG.map(s=>{const h=[];const pa=s.attributes.position;for(let i=0;i<14;i++){const k=Math.floor(R()*pa.count);const c=new THREE.ConeGeometry(.018,.1,3);c.rotateZ(R()*6.28);c.translate(pa.getX(k)*1.1,pa.getY(k),pa.getZ(k)*1.1);h.push(c.toNonIndexed());}return mergeG(h.concat([s.toNonIndexed()]));});
-  for(let i=0;i<8;i++){const side=i<4?-1:1,k=i%4;const root=new THREE.Group();root.position.set(side*.25,0,-.25+k*.14);body.add(root);
-   root.rotation.y=side*(-.75+k*.5)*-1;const a=new THREE.Group();root.add(a);a.rotation.z=side*-1.05;const m1=new THREE.Mesh(legHair[0],brown);a.add(m1);
-   const b=new THREE.Group();b.position.y=-.62;a.add(b);b.rotation.z=side*1.55;b.add(new THREE.Mesh(legHair[1],brown));
-   const c=new THREE.Group();c.position.y=-.7;b.add(c);c.rotation.z=side*.55;c.add(new THREE.Mesh(legHair[2],dk));
-   legs.push({root,a,b,c,side,ph:(k%2?Math.PI:0)+(side>0?Math.PI:0),ry:root.rotation.y});}
+  // bigger abdomen + cephalothorax with pedicel
+  const ab=new THREE.IcosahedronGeometry(.66,1);ab.scale(1,.82,1.3);ab.translate(0,.16,.78);const ce=new THREE.IcosahedronGeometry(.36,1);ce.scale(1,.68,1.15);ce.translate(0,0,-.12);
+  const pd=new THREE.CylinderGeometry(.1,.12,.2,5);pd.rotateX(Math.PI/2);pd.translate(0,.04,.24);
+  body.add(new THREE.Mesh(ab,brown));body.add(new THREE.Mesh(ce,brown));body.add(new THREE.Mesh(pd,dk));
+  const fz=fur(ab,200,.22,R).concat(fur(ce,90,.14,R));body.add(new THREE.Mesh(mergeG(fz),hair));
+  // abdomen markings: glowing chevrons + spots
+  const mk=[];for(let i=0;i<4;i++){for(const sx of [-1,1]){const m=new THREE.BoxGeometry(.24-i*.03,.03,.06);m.rotateY(sx*.55);m.translate(sx*(.1-i*.012),.66-i*.03,.5+i*.2);m.rotateX(0);mk.push(m.toNonIndexed());}}
+  for(const sx of [-1,1])for(let i=0;i<3;i++){const sp=new THREE.IcosahedronGeometry(.05,0);sp.translate(sx*(.38-i*.05),.42+i*.06,.6+i*.3);mk.push(sp.index?sp.toNonIndexed():sp);}
+  body.add(new THREE.Mesh(mergeG(mk),mark));
+  // thorax groove markings
+  const tg=new THREE.BoxGeometry(.04,.02,.3);tg.translate(0,.25,-.1);body.add(new THREE.Mesh(tg,mark));
+  // chelicerae with fangs
+  for(const s of [-1,1]){const ch=new THREE.Mesh(new THREE.CylinderGeometry(.075,.06,.22,5),brown);ch.rotation.x=.5;ch.position.set(s*.08,-.08,-.44);body.add(ch);
+   const f=new THREE.Mesh(new THREE.ConeGeometry(.035,.16,4),dk);f.rotation.x=-Math.PI*.8;f.rotation.z=-s*.3;f.position.set(s*.07,-.22,-.52);body.add(f);
+   const ft=new THREE.Mesh(new THREE.IcosahedronGeometry(.018,0),hot);ft.position.set(s*.06,-.28,-.56);body.add(ft);}
+  // pedipalps
+  S.palps=[];for(const s of [-1,1]){const pp=new THREE.Group();pp.position.set(s*.16,-.04,-.4);body.add(pp);const p1=new THREE.CylinderGeometry(.035,.03,.26,4);p1.translate(0,-.13,0);const m1=new THREE.Mesh(p1,brown);pp.add(m1);pp.rotation.x=-1.1;pp.rotation.z=s*.25;
+   const p2=new THREE.Group();p2.position.y=-.26;pp.add(p2);const g2=new THREE.CylinderGeometry(.03,.045,.18,4);g2.translate(0,-.09,0);p2.add(new THREE.Mesh(g2,hair));p2.rotation.x=.9;S.palps.push(pp);}
+  // eyes: 2 big front + 6 small, unlit and fog-free
+  eyesG=new THREE.Group();body.add(eyesG);const em=new THREE.MeshBasicMaterial({color:0xff1408,fog:false}),ring=new THREE.MeshBasicMaterial({color:0x200000});
+  const E=[[-.08,.12,-.43,.07],[.08,.12,-.43,.07],[-.19,.09,-.37,.035],[.19,.09,-.37,.035],[-.05,.22,-.37,.03],[.05,.22,-.37,.03],[-.14,.19,-.3,.028],[.14,.19,-.3,.028]];
+  E.forEach(([x,y,z,r],i)=>{const e=new THREE.Mesh(new THREE.IcosahedronGeometry(r,i<2?1:0),em);e.position.set(x,y,z);eyesG.add(e);if(i<2){const rr=new THREE.Mesh(new THREE.TorusGeometry(r*1.05,.012,3,8),ring);rr.position.set(x,y,z+.01);eyesG.add(rr);}});
+  const mkGlow=(c0,c1)=>{const gc=document.createElement('canvas');gc.width=gc.height=32;const gx=gc.getContext('2d');const gr=gx.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,c0);gr.addColorStop(.4,c1);gr.addColorStop(1,'rgba(0,0,0,0)');gx.fillStyle=gr;gx.fillRect(0,0,32,32);return new THREE.CanvasTexture(gc);};
+  const gt=mkGlow('rgba(255,40,20,1)','rgba(255,10,0,.35)');for(const s of [-1,1]){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,transparent:true}));sp.scale.set(.45,.45,1);sp.position.set(s*.09,.14,-.47);eyesG.add(sp);}
+  // fake orange halo (no real light, phone friendly)
+  const ot=mkGlow('rgba(255,120,30,.6)','rgba(255,80,10,.12)');S.halo=new THREE.Sprite(new THREE.SpriteMaterial({map:ot,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,transparent:true}));S.halo.scale.set(3.6,2.6,1);S.halo.position.set(0,.1,.3);body.add(S.halo);
+  // legs: femur, patella joint, tibia, metatarsus; hair tufts
+  const seg=(r0,r1,h,n)=>{const c=new THREE.CylinderGeometry(r0,r1,h,5);c.translate(0,-h/2,0);const hh=[c.toNonIndexed()];for(let i=0;i<n;i++){const y=-(i+.5)/n*h,an=R()*6.28,rr=r0+(r1-r0)*(-y/h);const t=new THREE.ConeGeometry(.02,.12,3);t.rotateZ(1.2+R()*.6);t.rotateY(an);t.translate(Math.cos(an)*rr,y,Math.sin(an)*rr);hh.push(t.index?t.toNonIndexed():t);}return mergeG(hh);};
+  const fem=seg(.065,.055,.62,16),tib=seg(.05,.04,.6,14),met=seg(.035,.014,.62,10),jo=new THREE.IcosahedronGeometry(.075,0),jo2=new THREE.IcosahedronGeometry(.058,0);
+  for(let i=0;i<8;i++){const side=i<4?-1:1,k=i%4;const root=new THREE.Group();root.position.set(side*.25,0,-.27+k*.14);body.add(root);
+   root.rotation.y=side*(-.75+k*.5)*-1;const a=new THREE.Group();root.add(a);a.rotation.z=side*-1.05;a.add(new THREE.Mesh(jo2,hot));a.add(new THREE.Mesh(fem,brown));
+   const b=new THREE.Group();b.position.y=-.62;a.add(b);b.rotation.z=side*1.55;b.add(new THREE.Mesh(jo,hot));b.add(new THREE.Mesh(tib,hair));
+   const c=new THREE.Group();c.position.y=-.6;b.add(c);c.rotation.z=side*.55;c.add(new THREE.Mesh(jo2,hot));c.add(new THREE.Mesh(met,dk));
+   legs.push({root,a,b,c,side,ph:(k%2?Math.PI:0)+(side>0?Math.PI:0),ry:root.rotation.y,bz:b.rotation.z,cz:c.rotation.z});}
   g.scale.setScalar(1.05);
   }
  S.build=function(scene,world,cs,gw){W=world;CSZ=cs;GWn=gw;pikes(scene);buildSpider(scene);};
@@ -699,7 +713,7 @@ const SPIDER=(function(){
   if(!prev.has(key(tx,ty)))return null;const p=[];let c=[tx,ty];while(c){p.push(c);c=prev.get(key(c[0],c[1]));}return p.reverse();}
  S.speed=4.8;
  S.reset=function(){S.state='idle';if(g)g.visible=false;};
- S.update=function(dt,t,player,camera,AU,st,region){if(!g)return;
+ S.update=function(dt,t,player,camera,AU,st,region){if(!g)return;if(g.visible){const pu=.85+.15*Math.sin(t*3.2);S.glowM.forEach(m=>m.emissiveIntensity=pu);S.hotM[0].color.setRGB(1,.5+.15*pu,.15);S.hotM[1].color.setRGB(1,.55+.2*pu,.2*pu);S.halo.material.opacity=.7+.3*pu;}
   if(st.spiderGone){if(g.visible)g.visible=false;return;}
   const inCata=region==='cata'&&player.x<GWn*CSZ;
   if(S.state==='idle'){if(st.clown&&inCata&&player.x>CSZ*2.1&&!S.catching){startP={x:player.x,z:player.z,yaw:player.yaw};spawn={x:CSZ*.5,z:Math.max(12.6,Math.min(17.4,player.z))};
@@ -719,7 +733,7 @@ const SPIDER=(function(){
     S.moving=d>.05;}
    const pd=Math.hypot(player.x-g.position.x,player.z-g.position.z);S.dist=pd;
    // legs
-   const sp=t*14;legs.forEach((l,i)=>{const s=Math.sin(sp+l.ph);l.root.rotation.y=l.ry+s*.28;l.a.rotation.x=Math.max(0,Math.cos(sp+l.ph))*.35*l.side;});S.body.position.y=.75+Math.sin(sp*2)*.03;
+   const sp=t*12;legs.forEach((l,i)=>{const q=sp+l.ph,s=Math.sin(q),lift=Math.pow(Math.max(0,Math.cos(q)),2);l.root.rotation.y=l.ry+s*.3;l.a.rotation.x=lift*.4*l.side;l.b.rotation.z=l.bz-l.side*lift*.25;l.c.rotation.z=l.cz+l.side*lift*.2;});S.palps.forEach((p,j)=>p.rotation.x=-1.1+Math.sin(sp*.5+j*2)*.15);S.body.position.y=.75+Math.sin(sp*2)*.03;
    if(AU.skitter){skT-=dt;if(skT<=0&&wait<=0){skT=.07+Math.random()*.06;const v=Math.max(0,1-pd/22);if(v>0){const rel=Math.atan2(g.position.x-player.x,g.position.z-player.z)+player.yaw;AU.skitter(v,Math.max(-1,Math.min(1,-Math.sin(rel))));}}}
    if(pd<1.0&&wait<=0)S.catch(player,st);}
  };
