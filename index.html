@@ -667,6 +667,37 @@ const FIELD=(function(){
   // field boundary
   boxes.push({x0:X0-3,x1:X0,z0:ZC-140,z1:ZC-1.35,lv:'any',on:1});boxes.push({x0:X0-3,x1:X0,z0:ZC+1.35,z1:ZC+140,lv:'any',on:1});boxes.push({x0:XT+110,x1:XT+113,z0:ZC-140,z1:ZC+140,lv:'any',on:1});
   boxes.push({x0:X0-3,x1:XT+113,z0:ZC-93,z1:ZC-90,lv:'any',on:1});boxes.push({x0:X0-3,x1:XT+113,z0:ZC+90,z1:ZC+93,lv:'any',on:1});
+  // ---- v5: the mountain. A long tall cliff face with the stair mouth in its base, mass rising behind ----
+  {const rockT=()=>px(64,64,(x,y)=>{const band=nz(0,y/64,1,7,2),n=nz(x/64,y/64,6,6,3),c=nz(x/64+2,y/64,14,3,2);let k=.62+n*.42+(band-.5)*.35;if(y%16<2)k*=.66;else if(y%16<4)k*=1.12;if(c>.8)k*=.7;return[128*k,118*k,104*k];});
+   const P=[],U=[],C=[];const H0=z=>FH+27+9*nz(z/180+.3,.5,6,1,2)+4*Math.sin(z*.05);const PK=z=>FH+62+26*nz(z/240+.7,.2,4,1,2)+10*Math.sin(z*.021+1);
+   const zs=[];for(let z=ZC+2.4;z<ZC+300;z+=4)zs.push(z);for(let z=ZC-2.4;z>ZC-300;z-=4)zs.unshift(z);zs.sort((a,b)=>a-b);
+   const jz=zs.map(z=>Math.abs(Math.abs(z-ZC)-2.4)<.01?z:z+(R()-.5)*2.2);const K=26;
+   const vtx=(j,k)=>{const z=jz[j];const near=ss(3,9,Math.abs(z-ZC));const b=F.ground(XT,z)-1.6;const h0=H0(z);let x,y;
+    if(k<=10){const n=nz(z/50,k/10,8,2,2);y=b+(h0-b)*k/10+(k>0&&k<10?((n-.5)*1.6+(R()-.5)*1.4)*near:0);x=XT+.5-k*.22-(k?(1.6*n+1.7*R())*near+(k%3===0?1.1:0):0);if(k<=2&&Math.abs(z-ZC)<3)x=XT+.5-k*.1;}
+    else{const t=(k-10)/(K-10);const n=nz(z/70,t,6,3,2);x=XT-3.6-t*120+(n-.5)*7;const r=Math.pow(Math.sin(Math.min(1,t*1.6)*Math.PI/2),.8)*(t>.62?1-(t-.62)*1.4:1);y=h0+(PK(z)-h0)*r+(n-.5)*6;y=Math.round(y/2.5)*2.5+(n-.5)*1.2;}
+    return[x,y,z];};
+   const G=zs.map((_,j)=>{const a=[];for(let k=0;k<=K;k++)a.push(vtx(j,k));return a;});
+   const tri=(a,b,c)=>{P.push(...a,...b,...c);const e1=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],e2=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];const nx=e1[1]*e2[2]-e1[2]*e2[1],ny=e1[2]*e2[0]-e1[0]*e2[2],nz2=e1[0]*e2[1]-e1[1]*e2[0];const l=Math.hypot(nx,ny,nz2)||1;const up=Math.abs(ny/l);
+    for(const p of [a,b,c]){U.push(p[2]/9,p[1]/9);const base=F.ground(XT,p[2]);let k=.5+.5*ss(base,base+14,p[1]);k*=.85+.3*nz(p[2]/30,p[1]/30,5,5,1);let col=[k,k*.97,k*.92];
+     if(up>.62){if(p[1]>FH+58)col=[1.9,1.9,2.0];else if(p[1]<FH+40)col=[.62,.95,.42];else col=[1.0,1.02,.85];}else if(p[1]<base+5&&nz(p[2]/14,p[1]/6,9,3,1)>.62)col=[.42,.62,.3];C.push(...col);}};
+   for(let j=0;j<zs.length-1;j++)for(let k=0;k<K;k++){if(k<2&&zs[j]>ZC-3&&zs[j+1]<ZC+3)continue;const a=G[j][k],b=G[j+1][k],c=G[j+1][k+1],d=G[j][k+1];tri(a,c,b);tri(a,d,c);}
+   // rough archway: jambs and a lintel of rock blocks around the stair mouth
+   const blk=(x0,x1,y0,y1,z0,z1,lockZ)=>{const g=new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0,2,2,1).toNonIndexed();const p=g.attributes.position;const key={};
+    for(let i=0;i<p.count;i++){const id=p.getX(i).toFixed(3)+p.getY(i).toFixed(3)+p.getZ(i).toFixed(3);if(!key[id]){const r=mulberry32(id.length*97+Math.round(Math.abs(p.getX(i)*131+p.getY(i)*71+p.getZ(i)*53+x0*7+z0*11+y0*3)))();key[id]=[(r-.5)*.5,(mulberry32(Math.round(r*1e6))()-.5)*.45,(r-.3)*.3];}const o=key[id];
+     p.setXYZ(i,p.getX(i)+(x0+x1)/2+(p.getX(i)>0?o[0]:0),p.getY(i)+(y0+y1)/2+(p.getY(i)>0||y0>FH?o[1]:0)*(lockZ==='bot'&&p.getY(i)<0?0:1),p.getZ(i)+(z0+z1)/2+(lockZ===true?0:o[2]*.6));}
+    for(let i=0;i<p.count;i+=3)tri([p.getX(i),p.getY(i),p.getZ(i)],[p.getX(i+1),p.getY(i+1),p.getZ(i+1)],[p.getX(i+2),p.getY(i+2),p.getZ(i+2)]);};
+   for(const s of [-1,1]){const zi=ZC+s*1.37,zo=ZC+s*3.1;blk(XT-3,XT+.7,FH-1,FH+1.6,Math.min(zi,zo),Math.max(zi,zo),true);blk(XT-3,XT+.55,FH+1.6,FH+3.1,Math.min(zi,zo),Math.max(zi,zo),true);
+    boxes.push({x0:XT-3,x1:XT+.95,z0:Math.min(zi,zo),z1:Math.max(zi,zo),lv:'any',on:1});}
+   blk(XT-3,XT+.75,FH+2.95,FH+4.3,ZC-3.4,ZC+.2,'bot');blk(XT-3,XT+.6,FH+2.95,FH+4.6,ZC-.2,ZC+3.4,'bot');blk(XT-3,XT+.3,FH+4.1,FH+5.8,ZC-3.2,ZC+3.2);blk(XT-5,XT-.4,FH+2.95,FH+8.5,ZC-3.6,ZC+3.6);
+   // big flanking buttresses so the mouth reads as a rough archway
+   const dg=new THREE.DodecahedronGeometry(1,0);const bould=(x,y,z,sx,sy,sz,ry)=>{const m=M4(x,y,z,ry,sx,sy,sz,(R()-.5)*.4,(R()-.5)*.4);const q=dg.clone();const pp=q.attributes.position;const kk={};for(let i=0;i<pp.count;i++){const id=pp.getX(i).toFixed(2)+pp.getY(i).toFixed(2)+pp.getZ(i).toFixed(2);if(!kk[id])kk[id]=.8+R()*.4;const f=kk[id];pp.setXYZ(i,pp.getX(i)*f,pp.getY(i)*f,pp.getZ(i)*f);}q.applyMatrix4(m);for(let i=0;i<pp.count;i+=3)tri([pp.getX(i),pp.getY(i),pp.getZ(i)],[pp.getX(i+1),pp.getY(i+1),pp.getZ(i+1)],[pp.getX(i+2),pp.getY(i+2),pp.getZ(i+2)]);};
+   for(const s of [-1,1]){bould(XT+.3,FH+1.2,ZC+s*4.3,1.5,2.6,1.4,R()*3);bould(XT-.1,FH+3.8,ZC+s*3.9,1.4,1.8,1.5,R()*3);bould(XT+.6,FH+.3,ZC+s*5.6,1.2,1.1,1.3,R()*3);boxes.push({x0:XT-1,x1:XT+1.9,z0:Math.min(ZC+s*3,ZC+s*6.8),z1:Math.max(ZC+s*3,ZC+s*6.8),lv:'any',on:1});}
+   bould(XT-.2,FH+5.6,ZC,1.6,1.3,3.6,0);bould(XT-.6,FH+6.6,ZC+2,1.3,1.4,1.6,1);
+   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.computeVertexNormals();
+   const cm=new THREE.Mesh(g,L({map:tx(rockT()),color:0xc8bca8,emissive:0x1a1814,vertexColors:true,flatShading:true}));scene.add(cm);F.cliff=cm;
+   F.cliffInfo={tris:P.length/9,zMin:zs[0],zMax:zs[zs.length-1],h0:H0(ZC),peak:PK(ZC)};
+   // collision along the whole face
+   boxes.push({x0:X0-3,x1:XT+.8,z0:ZC-310,z1:ZC-1.35,lv:'any',on:1});boxes.push({x0:X0-3,x1:XT+.8,z0:ZC+1.35,z1:ZC+310,lv:'any',on:1});}
   // daylight spilling down the stairwell
   {const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:MAT_GLOW(),color:0xdfe8f0,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.7,fog:false}));sp.scale.set(6,6,1);sp.position.set(XT+.5,FH+1.6,ZC);scene.add(sp);}
   // ---- ground ----
@@ -682,13 +713,13 @@ const FIELD=(function(){
   box(scene,L({map:tx(grassT()),color:0x9aa080}),X0-2,X0+4.2,FH-.06,FH+.01,ZC-1.35,ZC+1.35);
   // ---- trees, tufts ----
   const trunk=[],leaf=[],pine=[],tuft=[];const tg=new THREE.CylinderGeometry(.14,.22,1,5),lg=new THREE.IcosahedronGeometry(1,0),pg=new THREE.ConeGeometry(1,1,6),fg=new THREE.ConeGeometry(.08,.35,3);
-  const okSpot=(x,z,m)=>dBarn(x,z)>m+2&&Math.hypot(x-MILL.x,z-MILL.z)>MILL.r+m+2&&!(Math.abs(z-ZC)<6&&x<XT+12)&&pathD(x,z,XT,ZC,BARN.x-BARN.hw,BARN.z)>3&&pathD(x,z,XT+12,ZC+4,MILL.x,MILL.z+MILL.r)>3;
+  const okSpot=(x,z,m)=>dBarn(x,z)>m+2&&Math.hypot(x-MILL.x,z-MILL.z)>MILL.r+m+2&&x>XT+2.5&&!(Math.abs(z-ZC)<6&&x<XT+12)&&pathD(x,z,XT,ZC,BARN.x-BARN.hw,BARN.z)>3&&pathD(x,z,XT+12,ZC+4,MILL.x,MILL.z+MILL.r)>3;
   let placed=0;for(let t=0;t<600&&placed<70;t++){const a=R()*Math.PI*2,d=12+Math.pow(R(),.8)*95;const x=XT+20+Math.cos(a)*d,z=ZC+Math.sin(a)*d;if(x<X0+4||!okSpot(x,z,2))continue;
    const y=F.ground(x,z),s=.8+R()*.7;const tint=[.8+R()*.3,.85+R()*.3,.7+R()*.3];
    if(R()<.35){trunk.push([tg,M4(x,y+.5*s,z,0,s,s*1.2,s)]);pine.push([pg,M4(x,y+s*(1.2+1.6),z,R()*3,s*1.4,s*3.6,s*1.4),tint]);pine.push([pg,M4(x,y+s*3.6,z,R()*3,s*1.0,s*2.4,s*1.0),tint]);}
    else{trunk.push([tg,M4(x,y+1.1*s,z,0,s,s*2.2,s)]);leaf.push([lg,M4(x,y+s*2.9,z,R()*3,s*1.7,s*1.4,s*1.7),tint]);leaf.push([lg,M4(x+s*.7,y+s*2.4,z+s*.3,R()*3,s*1.1,s*.9,s*1.1),tint]);leaf.push([lg,M4(x-s*.6,y+s*2.6,z-s*.4,R()*3,s*1.0,s*.9,s*1.0),tint]);}
    if(d<60)circ.push({x,z,r:.3*s});placed++;}
-  for(let t=0;t<900;t++){const x=X0+2+R()*120,z=ZC-70+R()*140;if(!okSpot(x,z,-1.5))continue;const y=F.ground(x,z);const c=R()<.06?[2.2,2.1,1.6]:R()<.05?[2.4,2.0,.6]:[.7+R()*.3,.9+R()*.3,.5];for(let k=0;k<3;k++)tuft.push([fg,M4(x+(k-1)*.08,y+.15,z+(R()-.5)*.1,R()*3,1,1+R()*.6,1,(k-1)*.35,(R()-.5)*.4),c]);}
+  for(let t=0;t<900;t++){const x=XT+2.5+R()*110,z=ZC-70+R()*140;if(!okSpot(x,z,-1.5))continue;const y=F.ground(x,z);const c=R()<.06?[2.2,2.1,1.6]:R()<.05?[2.4,2.0,.6]:[.7+R()*.3,.9+R()*.3,.5];for(let k=0;k<3;k++)tuft.push([fg,M4(x+(k-1)*.08,y+.15,z+(R()-.5)*.1,R()*3,1,1+R()*.6,1,(k-1)*.35,(R()-.5)*.4),c]);}
   scene.add(new THREE.Mesh(merge(trunk),L({map:tx(woodT()),color:0x6a5040,vertexColors:true})));
   scene.add(new THREE.Mesh(merge(leaf),L({color:0x4f8a3a,flatShading:true,vertexColors:true})));
   scene.add(new THREE.Mesh(merge(pine),L({color:0x2f6a36,flatShading:true,vertexColors:true})));
@@ -791,7 +822,7 @@ const FIELD=(function(){
    sg.setAttribute('color',new THREE.Float32BufferAttribute(c,3));sky=new THREE.Mesh(sg,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false}));sky.renderOrder=-10;sky.visible=false;scene.add(sky);
    sun=new THREE.Sprite(new THREE.SpriteMaterial({map:MAT_GLOW(),color:0xfff4d8,fog:false,depthWrite:false,transparent:true,blending:THREE.AdditiveBlending}));sun.scale.set(90,90,1);sun.visible=false;scene.add(sun);
    const cm=new THREE.MeshBasicMaterial({color:0xffffff,fog:false,transparent:true,opacity:.92});for(let i=0;i<14;i++){const cg=new THREE.Group();const a=R()*Math.PI*2,d=160+R()*160;cg.userData={a,d,h:70+R()*40};for(let k=0;k<3+Math.floor(R()*3);k++){const pf=new THREE.Mesh(new THREE.IcosahedronGeometry(1,0),cm);pf.scale.set(10+R()*12,4+R()*3,8+R()*8);pf.position.set(k*12-12+R()*4,R()*3,R()*6);cg.add(pf);}cg.visible=false;scene.add(cg);clouds.push(cg);}
-   dirL=new THREE.DirectionalLight(0xfff0d8,0);dirL.position.set(-.5,1,.35);scene.add(dirL);}
+   dirL=new THREE.DirectionalLight(0xfff0d8,0);dirL.position.set(.6,.8,.3);scene.add(dirL);}
   F.built=true;};
  F.setStats=function(s){stats=s;if(!signC)return;const x=signC.getContext('2d');x.fillStyle='#6a4a2c';x.fillRect(0,0,256,128);x.fillStyle='rgba(0,0,0,.25)';for(let i=0;i<5;i++)x.fillRect(0,i*26,256,2);
   x.fillStyle='#f0e4c8';x.textAlign='center';x.font='bold 20px Georgia,serif';x.fillText('THE CATACOMBS 64',128,30);x.font='16px Georgia,serif';
@@ -802,7 +833,7 @@ const FIELD=(function(){
  F.update=function(dt,t,camera,player,AU){if(!F.built)return;const r=F.region(player.x,player.z,player.y);const out=r==='field'||r==='barn'||r==='mill'||r==='stair';
   const want=out?600:40;if(want!==far){far=want;camera.far=far;camera.updateProjectionMatrix();}
   sky.visible=sun.visible=out;clouds.forEach(c=>c.visible=out);
-  if(out){sky.position.copy(camera.position);sun.position.set(camera.position.x-180,camera.position.y+260,camera.position.z+120);for(const c of clouds){const d=c.userData;d.a+=dt*.004;c.position.set(XT+40+Math.cos(d.a)*d.d,FH+d.h,ZC+Math.sin(d.a)*d.d);c.lookAt(camera.position.x,c.position.y,camera.position.z);}}
+  if(out){sky.position.copy(camera.position);sun.position.set(camera.position.x+180,camera.position.y+260,camera.position.z+120);for(const c of clouds){const d=c.userData;d.a+=dt*.004;c.position.set(XT+40+Math.cos(d.a)*d.d,FH+d.h,ZC+Math.sin(d.a)*d.d);c.lookAt(camera.position.x,c.position.y,camera.position.z);}}
   const lv={field:1.5,mill:.5,barn:.35,stair:.5}[r]||0;dirL.intensity+=(lv-dirL.intensity)*Math.min(1,dt*2);
   lanternL.intensity=(r==='barn'?3.2:r==='field'?1:0)*(.9+.1*Math.sin(t*9)+.05*Math.sin(t*23));lanternGlow.material.opacity=.45+.1*Math.sin(t*7);
   if(sails){sails.rotation.z-=dt*.55;if(F.shaft)F.shaft.rotation.y+=dt*.55;}
