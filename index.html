@@ -712,12 +712,12 @@ const SPIDER=(function(){
  const ok=(x,y)=>x>=0&&x<GWn&&y>=0&&W.fl(x,y)&&!(typeof shifters!=='undefined'&&shifters.some(o=>o.closed&&o.s.x===x&&o.s.y===y));
  function bfs(sx,sy,tx,ty){const key=(x,y)=>y*GWn+x;const prev=new Map();const q=[[sx,sy]];prev.set(key(sx,sy),null);while(q.length){const [x,y]=q.shift();if(x===tx&&y===ty)break;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const u=x+a,v=y+b;if(!ok(u,v)||W.sep(x,y,a,b)||prev.has(key(u,v)))continue;prev.set(key(u,v),[x,y]);q.push([u,v]);}}
   if(!prev.has(key(tx,ty)))return null;const p=[];let c=[tx,ty];while(c){p.push(c);c=prev.get(key(c[0],c[1]));}return p.reverse();}
- S.speed=4.8;
+ S.speed=4.0;
  S.reset=function(){S.state='idle';if(g)g.visible=false;};
  S.update=function(dt,t,player,camera,AU,st,region){if(!g)return;if(g.visible){const pu=.85+.15*Math.sin(t*3.2);S.glowM.forEach(m=>m.emissiveIntensity=pu);S.hotM[0].color.setRGB(1,.5+.15*pu,.15);S.hotM[1].color.setRGB(1,.55+.2*pu,.2*pu);S.halo.material.opacity=.7+.3*pu;}
   if(st.spiderGone){if(g.visible)g.visible=false;return;}
   const inCata=region==='cata'&&player.x<GWn*CSZ;
-  if(S.state==='idle'){if(st.clown&&inCata&&player.x>CSZ*2.1&&!S.catching){startP={x:player.x,z:player.z,yaw:player.yaw};spawn={x:CSZ*.5,z:Math.max(12.6,Math.min(17.4,player.z))};
+  if(S.state==='idle'){if(st.clown&&inCata&&player.x>CSZ*3.6&&!S.catching){startP={x:player.x,z:player.z,yaw:player.yaw};spawn={x:CSZ*.5,z:Math.max(12.6,Math.min(17.4,player.z))};
     g.position.set(spawn.x,0,spawn.z);g.visible=true;S.state='chase';wait=1.6;st.spider=1;if(AU.spiderBurst)AU.spiderBurst();}return;}
   if(S.state==='caught'){S.updateCaught(dt,t,player,camera);return;}
   if(S.state==='chase'){if(S.hold){g.visible=true;return;}
@@ -734,7 +734,7 @@ const SPIDER=(function(){
     S.moving=d>.05;}
    const pd=Math.hypot(player.x-g.position.x,player.z-g.position.z);S.dist=pd;
    // legs
-   const sp=t*12;legs.forEach((l,i)=>{const q=sp+l.ph,s=Math.sin(q),lift=Math.pow(Math.max(0,Math.cos(q)),2);l.root.rotation.y=l.ry+s*.3;l.a.rotation.x=lift*.4*l.side;l.b.rotation.z=l.bz-l.side*lift*.25;l.c.rotation.z=l.cz+l.side*lift*.2;});S.palps.forEach((p,j)=>p.rotation.x=-1.1+Math.sin(sp*.5+j*2)*.15);S.body.position.y=1.15+Math.sin(sp*2)*.03;
+   const sp=t*10;legs.forEach((l,i)=>{const q=sp+l.ph,s=Math.sin(q),lift=Math.pow(Math.max(0,Math.cos(q)),2);l.root.rotation.y=l.ry+s*.3;l.a.rotation.x=lift*.4*l.side;l.b.rotation.z=l.bz-l.side*lift*.25;l.c.rotation.z=l.cz+l.side*lift*.2;});S.palps.forEach((p,j)=>p.rotation.x=-1.1+Math.sin(sp*.5+j*2)*.15);S.body.position.y=1.15+Math.sin(sp*2)*.03;
    if(AU.skitter){skT-=dt;if(skT<=0&&wait<=0){skT=.07+Math.random()*.06;const v=Math.max(0,1-pd/22);if(v>0){const rel=Math.atan2(g.position.x-player.x,g.position.z-player.z)+player.yaw;AU.skitter(v,Math.max(-1,Math.min(1,-Math.sin(rel))));}}}
    if(pd<1.0&&wait<=0)S.catch(player,st);}
  };
